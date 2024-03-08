@@ -1,9 +1,10 @@
 
 const Booking = require('../models/Booking');
+const Room = require('../models/Room');
 
 // Get all bookings
 exports.getAllBookings = async (req, res) => {
-  const { startDate, endDate, sortByTime, status, page = 1, perPage = 10 } = req.query;
+  const { startDate, endDate, sortByTime, status } = req.query;
 
   // Construct filter object based on the query parameters
   let filter = {};
@@ -24,20 +25,28 @@ exports.getAllBookings = async (req, res) => {
     sort.startTime = sortByTime === 'asc' ? 1 : -1;
   }
 
-  // Pagination
-  const skip = (page - 1) * perPage;
-
   try {
-    const totalBookings = await Booking.countDocuments(filter);
-    const totalPages = Math.ceil(totalBookings / perPage);
-
-    const bookings = await Booking.find(filter)
+    let bookings = await Booking.find(filter)
       .sort(sort)
-      .skip(skip)
-      .limit(perPage)
+      .populate('rooms')
       .exec();
 
-    res.json({ bookings, totalPages, activePage: page });
+    // Update bookings status to COMPLETED if end time is complete by date and time
+    bookings = bookings.map(booking => {
+      const now = new Date();
+      const endTime = new Date(booking.endTime);
+
+      if (now >= endTime) {
+        // Update status to COMPLETED if end time is complete by date and time
+        booking.status = 'COMPLETED';
+        // Save the updated booking
+        booking.save();
+      }
+
+      return booking;
+    });
+
+    res.json({ bookings });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -57,7 +66,7 @@ exports.getBookingById = async (req, res) => {
 };
 
 exports.createBooking = async (req, res) => {
-  const { email, rooms, startTime, endTime } = req.body;
+  const { email, rooms, startTime, endTime, amount } = req.body;
 
   try {
     // Check if start time is before current time
@@ -67,10 +76,12 @@ exports.createBooking = async (req, res) => {
     if (start < now) {
       return res.status(400).json({ message: 'Start time cannot be in the past' });
     }
-
-    // Check if end time is greater than start time
     if (end <= start) {
       return res.status(400).json({ message: 'End time must be greater than start time' });
+    }
+
+    if(!Array.isArray(rooms) || rooms.length === 0) {
+      return res.status(400).json({ message: 'At least one room must be selected' });
     }
 
     // Check room availability
@@ -84,9 +95,17 @@ exports.createBooking = async (req, res) => {
       rooms,
       startTime: start,
       endTime: end,
+      amount
     });
 
     await booking.save();
+
+    // Update the corresponding rooms with the booking ID
+    await Room.updateMany(
+      { _id: { $in: rooms } },
+      { $push: { bookings: booking._id } }
+    );
+
     res.status(201).json({ message: 'Booking created successfully', booking });
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -102,6 +121,10 @@ async function checkRoomAvailability(rooms, startTime, endTime) {
       $or: [
         { startTime: { $lt: endTime }, endTime: { $gt: startTime } },
         { startTime: { $eq: startTime }, endTime: { $eq: endTime } }
+      ],
+      $or: [
+        { status: { $ne: 'CANCELLED' } },
+        { status: { $exists: false } }
       ]
     });
 
@@ -113,7 +136,7 @@ async function checkRoomAvailability(rooms, startTime, endTime) {
 
 // Update booking
 exports.updateBooking = async (req, res) => {
-  const { email, rooms, startTime, endTime, status, refundedAmount } = req.body;
+  const { email, rooms, startTime, endTime, status, refundedAmount, amount } = req.body;
 
   try {
 
@@ -126,8 +149,9 @@ exports.updateBooking = async (req, res) => {
     booking.rooms = rooms || booking.rooms;
     booking.startTime = new Date(startTime || booking.startTime);
     booking.endTime = new Date(endTime || booking.endTime);
-    booking.status = status || booking.status;
+    booking.status = status || "UPCOMING";
     booking.refundedAmount = refundedAmount || booking.refundedAmount;
+    booking.amount = amount || booking.amount;
 
     // Check if start time is before current time
     const now = new Date();
@@ -167,9 +191,13 @@ async function checkRoomAvailabilityForUpdate(rooms, startTime, endTime, current
       $or: [
         { startTime: { $lt: endTime }, endTime: { $gt: startTime } },
         { startTime: { $eq: startTime }, endTime: { $eq: endTime } }
+      ],
+      $or: [
+        { status: { $ne: 'CANCELLED' } },
+        { status: { $exists: false } }
       ]
     });
-   
+
     return existingBookings.length === 0;
   } catch (error) {
     throw new Error('Error checking room availability');
@@ -183,6 +211,12 @@ exports.deleteBooking = async (req, res) => {
     if (!booking) {
       return res.status(404).json({ message: 'Booking not found' });
     }
+
+    // Remove the booking ID from the corresponding room's bookings array
+    await Room.findOneAndUpdate(
+      { bookings: req.params.id },
+      { $pull: { bookings: req.params.id } }
+    );
 
     res.json({ message: 'Booking deleted successfully' });
   } catch (error) {

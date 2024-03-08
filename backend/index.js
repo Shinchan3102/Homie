@@ -17,7 +17,7 @@ app.use("/api/rooms", roomRoutes);
 
 
 app.get("/", (req, res) => {
-  res.status(200).json({ message: "Infantry server is running" })
+  res.status(200).json({ message: "my server is running" })
 
 })
 

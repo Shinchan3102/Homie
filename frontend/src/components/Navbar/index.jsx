@@ -6,7 +6,7 @@ const Navbar = () => {
       <Logo />
 
       <div className="flex items-center gap-4">
-        <div className="h-10 w-10 rounded-full bg-muted-color" />
+        <div className="h-10 w-10 rounded-full bg-secondary" />
       </div>
     </div>
   )

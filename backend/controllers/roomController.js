@@ -2,7 +2,14 @@
 const Room = require('../models/Room');
 
 exports.getAllRooms = async (req, res) => {
-  const { type, minPrice, maxPrice, sortByPrice, page = 1, perPage = 10, startDate, endDate } = req.query;
+  const { type, minPrice, maxPrice, sortByPrice, startTime, endTime } = req.query;
+
+  const start = new Date(startTime);
+  const end = new Date(endTime);
+
+  if (startTime && endTime && start > end) {
+    return res.status(400).json({ message: 'Start date should be less than end date' });
+  }
 
   // Construct filter object
   let filter = {};
@@ -23,56 +30,53 @@ exports.getAllRooms = async (req, res) => {
     sort.pricePerHour = sortByPrice === 'asc' ? 1 : -1;
   }
 
-  // Pagination
-  const skip = (page - 1) * perPage;
-
   try {
-    let roomsQuery = Room.find(filter).sort(sort).skip(skip).limit(perPage);
+    let roomsQuery = Room.find(filter).sort(sort);
 
     // Check availability if startDate and endDate are provided
-    if (startDate && endDate) {
+    if (startTime && endTime) {
       roomsQuery = roomsQuery.where({
         $or: [
-          { bookings: { $eq: [] } }, // If no bookings
-          { bookings: { $elemMatch: { start: { $gte: endDate }, end: { $lte: startDate } } } } // If bookings don't overlap
+          { bookings: { $eq: [] } },
+          { bookings: { $elemMatch: { start: { $gte: end }, end: { $lte: start }, status: { $ne: 'CANCELLED' } } } }
         ]
       });
     }
-    else if(startDate){
+    else if (startTime) {
       roomsQuery = roomsQuery.where({
         $or: [
-          { bookings: { $eq: [] } }, // If no bookings
-          { bookings: { $elemMatch: { start: { $gte: endDate } } } } // If bookings don't overlap
+          { bookings: { $eq: [] } },
+          { bookings: { $elemMatch: { start: { $gte: start }, status: { $ne: 'CANCELLED' } } } }
         ]
       });
     }
-    else if(endDate){
+    else if (endTime) {
       roomsQuery = roomsQuery.where({
         $or: [
-          { bookings: { $eq: [] } }, // If no bookings
-          { bookings: { $elemMatch: { end: { $lte: startDate } } } } // If bookings don't overlap
+          { bookings: { $eq: [] } },
+          { bookings: { $elemMatch: { end: { $lte: end } } } }
         ]
       });
     }
 
     const rooms = await roomsQuery.exec();
 
-    // Count total rooms
-    const totalRooms = await Room.countDocuments(filter);
-
-    // Calculate total pages
-    const totalPages = Math.ceil(totalRooms / perPage);
-
-    res.json({
-      rooms: rooms,
-      totalPages: totalPages,
-      activePage: page
-    });
+    res.json({ rooms });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
+
+// Get room by ID
+exports.getRoomTypes = async (req, res) => {
+  try {
+    const roomTypes = await Room.distinct('type');
+    res.json(roomTypes);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
 // Get room by ID
 exports.getRoomById = async (req, res) => {

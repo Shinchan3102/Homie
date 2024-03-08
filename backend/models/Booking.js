@@ -30,6 +30,10 @@ const bookingSchema = new mongoose.Schema({
   cancelledAt: {
     type: Date
   },
+  amount: {
+    type: Number,
+    required: true
+  },
   refundedAmount: {
     type: Number,
     default: 0

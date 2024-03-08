@@ -1,9 +1,12 @@
+import { useLocation } from "react-router-dom"
 import { sidebarItems } from "../../constants/data"
 import SidebarItem from "./SidebarItem"
 
 const Sidebar = () => {
+  const location=useLocation();
+
   return (
-    <div className="bg-primary-bg min-w-72 border-r h-full p-8 py-10">
+    <div className="bg-white min-w-72 border-r h-full p-6 py-8">
       <ul className="flex flex-col gap-2">
         {
           sidebarItems.map((item) => (
@@ -12,6 +15,7 @@ const Sidebar = () => {
                 title={item.title}
                 path={item.path}
                 Icon={item.Icon}
+                isActive={item.path === location.pathname}
               />
             </li>
           ))
