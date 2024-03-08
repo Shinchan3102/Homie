@@ -2,11 +2,11 @@ const express = require('express');
 const app = express();
 const bookingRoutes = require("./routes/bookingRoutes");
 const roomRoutes = require("./routes/roomRoutes");
-const port = process.env.PORT || 5000;
 const cors = require('cors');
 const connectDB = require('./db/connect');
 require('dotenv').config();
 
+const port = process.env.PORT || 5000;
 // console.log(new Date().toISOString());
 
 app.use(express.json({ limit: "50mb" }));
