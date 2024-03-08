@@ -57,13 +57,14 @@ const Booking = () => {
   const handleCancelBooking = async () => {
     const bookingId = selectedBooking._id;
     if (!bookingId) return console.error("Booking Id is required");
-    const { refundedAmount } = getRefundedDetails(
+    const { refundAmount } = getRefundedDetails(
       selectedBooking?.startTime,
       selectedBooking?.amount
     );
+
     const res = await updateBooking({
       bookingId,
-      data: { status: "CANCELLED", refundedAmount },
+      data: { status: "CANCELLED", refundedAmount: refundAmount },
     });
     if (res.status === 400) {
       toast({
@@ -186,6 +187,7 @@ const Booking = () => {
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
+                        disabled={booking.status === "CANCELLED"}
                         onClick={() => {
                           setSelectedBooking(booking);
                           setOpenConfirmModal(true);
@@ -231,17 +233,17 @@ const Booking = () => {
             initialValues={
               selectedBooking
                 ? {
-                  ...selectedBooking,
-                  startDate: new Date(selectedBooking.startTime),
-                  endDate: new Date(selectedBooking.endTime),
-                  startTime: new Date(selectedBooking.startTime),
-                  endTime: new Date(selectedBooking.endTime),
-                  roomNumber: selectedBooking.rooms[0].roomNumber,
-                  entryTime: formatTimeFromDate(selectedBooking.startTime),
-                  exitTime: formatTimeFromDate(selectedBooking.endTime),
-                  amount: selectedBooking.price,
-                  type: selectedBooking.rooms[0].type,
-                }
+                    ...selectedBooking,
+                    startDate: new Date(selectedBooking.startTime),
+                    endDate: new Date(selectedBooking.endTime),
+                    startTime: new Date(selectedBooking.startTime),
+                    endTime: new Date(selectedBooking.endTime),
+                    roomNumber: selectedBooking.rooms[0].roomNumber,
+                    entryTime: formatTimeFromDate(selectedBooking.startTime),
+                    exitTime: formatTimeFromDate(selectedBooking.endTime),
+                    amount: selectedBooking.price,
+                    type: selectedBooking.rooms[0].type,
+                  }
                 : {
                     email: "",
                     startDate: new Date(),

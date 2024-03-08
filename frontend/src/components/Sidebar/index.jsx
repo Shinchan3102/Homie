@@ -6,7 +6,7 @@ const Sidebar = () => {
   const location=useLocation();
 
   return (
-    <div className="bg-white min-w-72 border-r h-full p-6 py-8">
+    <div className="bg-white md:min-w-72 h-full md:p-6 py-8">
       <ul className="flex flex-col gap-2">
         {
           sidebarItems.map((item) => (

@@ -72,14 +72,14 @@ export const bookingColumns = [
     accessorKey: "createdAt",
     header: "Booking Date",
     cell: ({ row }) => (
-      <div>{formatDate(new Date(row.original.createdAt))}</div>
+      <div className="min-w-28">{formatDate(new Date(row.original.createdAt))}</div>
     ),
   },
   {
     accessorKey: "updatedAt",
     header: "Cancelled Date",
     cell: ({ row }) => (
-      <div>
+      <div className="min-w-28">
         {row.original.status === "CANCELLED"
           ? formatDate(new Date(row.original.updatedAt))
           : "-"}
@@ -90,14 +90,14 @@ export const bookingColumns = [
     accessorKey: "startTime",
     header: "Begins At",
     cell: ({ row }) => (
-      <div>{formatIndianDateTime(new Date(row.original.startTime))}</div>
+      <div className="min-w-28">{formatIndianDateTime(new Date(row.original.startTime))}</div>
     ),
   },
   {
     accessorKey: "endTime",
     header: "Ends At",
     cell: ({ row }) => (
-      <div>{formatIndianDateTime(new Date(row.original.endTime))}</div>
+      <div className="min-w-28">{formatIndianDateTime(new Date(row.original.endTime))}</div>
     ),
   },
 ];

@@ -61,12 +61,12 @@ export const roomColumns = [
     accessorKey: "createdAt",
     header: "Added On",
     cell: ({ row }) => (
-      <div>{formatDate(new Date(row.original.createdAt))}</div>
+      <div className="min-w-28">{formatDate(new Date(row.original.createdAt))}</div>
     ),
   },
   {
     accessorKey: "updatedAt",
     header: "Updated On",
-    cell: ({ row }) => <div>{formatDate(new Date(row.original.updatedAt))}</div>,
+    cell: ({ row }) => <div className="min-w-28">{formatDate(new Date(row.original.updatedAt))}</div>,
   },
 ];
