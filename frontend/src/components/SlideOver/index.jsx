@@ -9,12 +9,13 @@ import {
 import Logo from "../Logo";
 import { MdOutlineMenu } from "react-icons/md";
 
-
 export default function SlideOver({ children }) {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="icon" className="text-xl"><MdOutlineMenu /></Button>
+        <Button variant="icon" className="text-xl">
+          <MdOutlineMenu />
+        </Button>
       </SheetTrigger>
       <SheetContent>
         <div className="h-full flex flex-col justify-between">
@@ -26,7 +27,9 @@ export default function SlideOver({ children }) {
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="h-12 w-12 bg-muted rounded-full" />
+            <div className="h-12 w-12 bg-indigo-600 text-white flex items-center justify-center rounded-full">
+              A
+            </div>
             <div className="text-lg font-semibold">Admin</div>
           </div>
         </div>

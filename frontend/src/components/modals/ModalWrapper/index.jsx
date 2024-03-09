@@ -10,14 +10,14 @@ import {
 export default function ModalWrapper({ title, open, setOpen, component }) {
   return (
     <Dialog open={open} onOpenChange={(value) => setOpen(value)}>
-      <DialogContent className="max-w-[800px] w-fit min-w-[360px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="max-w-[800px] md:w-[80vw] min-w-[360px]">
+        <DialogHeader className={'h-12'}>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>
             Book a room for your customer easily.
           </DialogDescription>
         </DialogHeader>
-        <div>{component}</div>
+        <div className="max-h-[calc(100vh-6rem)] overflow-y-auto">{component}</div>
       </DialogContent>
     </Dialog>
   );

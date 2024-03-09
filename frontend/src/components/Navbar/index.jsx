@@ -8,7 +8,7 @@ export default function Navbar() {
       <Logo />
 
       <div className="items-center gap-4 md:block hidden">
-        <div className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center bg-indigo-600 text-white">
+        <div className="h-10 w-10 rounded-full flex items-center justify-center bg-indigo-600 text-white">
           A
         </div>
       </div>

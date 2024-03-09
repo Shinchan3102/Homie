@@ -142,9 +142,9 @@ export default function AddAndEditBooking({
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+        className="grid grid-cols-1 md:grid-cols-2 gap-6"
       >
-        <div className="lg:col-span-2 col-span-1 grid grid-cols-1 lg:grid-cols-2 items-end gap-6">
+        <div className="md:col-span-2 col-span-1 grid grid-cols-1 md:grid-cols-2 items-end gap-6">
           <DatePicker form={form} label="Starting Date*" name={"startDate"} />
           <DatePicker form={form} label="Ending Date*" name={"endDate"} />
           <TextInput
@@ -172,7 +172,7 @@ export default function AddAndEditBooking({
           />
           <Button
             disabled={isLoading || isFinalLoading}
-            className="lg:col-span-2 gap-2"
+            className="md:col-span-2 gap-2"
             type="button"
             onClick={getRooms}
           >
@@ -219,7 +219,7 @@ export default function AddAndEditBooking({
           placeholder={""}
           disabled
         />
-        <div className="lg:col-span-2 col-span-1 grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="md:col-span-2 col-span-1 grid grid-cols-1 md:grid-cols-2 gap-6">
           <Button type="button" variant={"outline"} onClick={onCancel}>
             Cancel
           </Button>
