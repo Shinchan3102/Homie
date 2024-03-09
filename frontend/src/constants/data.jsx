@@ -2,7 +2,7 @@ import { RxDashboard } from "react-icons/rx";
 import { IoBookOutline } from "react-icons/io5";
 import { FaBed } from "react-icons/fa";
 
-export const baseUrl='https://homie-six.vercel.app/api';
+export const baseUrl='http://localhost:8000/api';
 
 
 export const sidebarItems=[

@@ -27,13 +27,26 @@ import { getAllRoomTypes } from "@/api/roomApis";
 import ConfirmModal from "@/components/modals/ConfirmModal";
 import { useToast } from "@/components/ui/use-toast";
 import { formatTimeFromDate } from "@/lib/utils";
+import MultipleSelect from "@/components/formComponents/MultipleSelect";
+import NormalDatePicker from "@/components/formComponents/NormalDatePicker";
+import NormalInput from "@/components/formComponents/NormalInput";
 
 const Booking = () => {
+  // ----- States -----
   const [bookingData, setBookingData] = useState([]);
+  const [searchString, setSearchString] = useState("");
   const [openFormModal, setOpenFormModal] = useState(false);
   const [openConfirmModal, setOpenConfirmModal] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [roomTypes, setRoomTypes] = useState([]);
+  const [filterRoomTypes, setFilterRoomTypes] = useState([]);
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
+  const [filterStatus, setFilterStatus] = useState([
+    { id: 1, name: "CANCELLED", checked: true },
+    { id: 2, name: "COMPLETED", checked: true },
+    { id: 3, name: "UPCOMING", checked: true },
+  ]);
   const [confirmType, setConfirmType] = useState("DELETE");
 
   const { toast } = useToast();
@@ -136,13 +149,18 @@ const Booking = () => {
   const getRoomTypes = async () => {
     const res = await getAllRoomTypes();
     setRoomTypes(res);
+    setFilterRoomTypes(
+      res.map((type, id) => ({ id, name: type, checked: true }))
+    );
   };
 
+  // ----- Effects -----
   useEffect(() => {
     getBookings();
     getRoomTypes();
   }, []);
 
+  // ----- Render -----
   return (
     <div className="bg-white flex-1 p-8">
       <div className="flex items-center justify-between gap-4">
@@ -152,14 +170,55 @@ const Booking = () => {
           className="flex items-center gap-2"
         >
           <IoAdd className="text-xl" />
-          New Booking
+          New <span className="hidden md:block">Booking</span>
         </Button>
       </div>
 
       {/* filter section  */}
+      <div className="mt-8 flex justify-start gap-4 overflow-x-auto items-center">
+        <div className="flex-1 min-w-40">
+          <NormalInput
+            label={"Search here"}
+            data={searchString}
+            setData={setSearchString}
+          />
+        </div>
+        <MultipleSelect
+          options={filterRoomTypes}
+          handleToggle={(id, value) => {
+            setFilterRoomTypes((prev) =>
+              prev.map((type) =>
+                type.id === id ? { ...type, checked: value } : type
+              )
+            );
+          }}
+          label={"Room Types"}
+        />
+        <MultipleSelect
+          options={filterStatus}
+          handleToggle={(id, value) => {
+            setFilterStatus((prev) =>
+              prev.map((status) =>
+                status.id === id ? { ...status, checked: value } : status
+              )
+            );
+          }}
+          label={"Status"}
+        />
+        <NormalDatePicker
+          label={"Start Date"}
+          date={startDate}
+          setDate={setStartDate}
+        />
+        <NormalDatePicker
+          label={"End Date"}
+          date={endDate}
+          setDate={setEndDate}
+        />
+      </div>
 
       {/* table section  */}
-      <div className="mt-8">
+      <div className="mt-2">
         <DataTable
           columns={[
             ...bookingColumns,
@@ -214,7 +273,30 @@ const Booking = () => {
               },
             },
           ]}
-          data={bookingData}
+          data={bookingData.filter((booking) => {
+            const roomType = booking.rooms[0]?.type;
+            const bookingDate = new Date(booking.startTime);
+            const isRoomTypeSelected = filterRoomTypes.find(
+              (type) => type.name === roomType
+            )?.checked;
+            const isStatusSelected = filterStatus.find(
+              (status) => status.name === booking.status
+            )?.checked;
+            const isStartDateSelected = !startDate
+              ? true
+              : bookingDate >= startDate;
+            const isEndDateSelected = !endDate ? true : bookingDate <= endDate;
+            const isSearchStringMatched =
+              booking.email?.includes(searchString) ||
+              booking.rooms[0]?.roomNumber?.toString()?.includes(searchString);
+            return (
+              isRoomTypeSelected &&
+              isStatusSelected &&
+              isStartDateSelected &&
+              isEndDateSelected &&
+              isSearchStringMatched
+            );
+          })}
         />
       </div>
 
