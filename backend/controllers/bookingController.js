@@ -29,7 +29,7 @@ async function checkRoomAvailability(rooms, startTime, endTime, bookingId = null
 
 exports.getDashboard = async (req, res) => {
   try {
-    const ISTOffset = 5.5 * 60 * 60 * 1000; // IST offset in milliseconds
+    const ISTOffset = 5.5 * 60 * 60 * 1000;
     const nowIST = new Date(Date.now() + ISTOffset); // Current time in IST
 
     // Set to the beginning of the day in IST
@@ -41,28 +41,42 @@ exports.getDashboard = async (req, res) => {
     endOfDayIST.setHours(23, 59, 59, 999);
 
     // Count total bookings
-    const totalBookings = await Booking.countDocuments();
+    const bookings = await Booking.find();
+    const totalBookings = bookings.length;
+    const totalUpcomingBookings = bookings.filter(booking => booking.status === upcoming).length;
+    
+    // Filter today's bookings based on IST day, month, and year
+    const todayUpcomingBookings = bookings.filter(booking => {
+      const startTimeIST = new Date(booking.startTime);
+      const bookingDay = startTimeIST.getDate();
+      const bookingMonth = startTimeIST.getMonth();
+      const bookingYear = startTimeIST.getFullYear();
+      
+      const todayDay = todayIST.getDate();
+      const todayMonth = todayIST.getMonth();
+      const todayYear = todayIST.getFullYear();
 
-    // Count total upcoming bookings (not cancelled) in IST
-    const totalUpcomingBookings = await Booking.countDocuments({ startTime: { $gt: nowIST }, status: { $ne: cancelled} });
+      return (
+        bookingYear === todayYear &&
+        bookingMonth === todayMonth &&
+        bookingDay === todayDay &&
+        startTimeIST >= nowIST
+      );
+    }).length;
 
-    // Count total today bookings (not cancelled) in IST
-    const totalTodayBookings = await Booking.countDocuments({ startTime: { $gte: todayIST, $lte: endOfDayIST }, status: { $ne: cancelled} });
-
-    // Count total cancelled bookings in IST
-    const totalCancelledBookings = await Booking.countDocuments({ status: cancelled});
-
+    const totalCancelledBookings = bookings.filter(booking => booking.status === cancelled).length;
 
     res.json({
       totalBookings,
       totalUpcomingBookings,
-      totalTodayBookings,
+      totalTodayBookings: todayUpcomingBookings, // Use the filtered count
       totalCancelledBookings,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
+
 
 
 
