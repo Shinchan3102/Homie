@@ -44,19 +44,20 @@ exports.getDashboard = async (req, res) => {
     const totalBookings = await Booking.countDocuments();
 
     // Count total upcoming bookings (not cancelled) in IST
-    const totalUpcomingBookings = await Booking.countDocuments({ startTime: { $gt: nowIST }, status: { $ne: 'CANCELLED' } });
+    const totalUpcomingBookings = await Booking.countDocuments({ startTime: { $gt: nowIST }, status: { $ne: cancelled} });
 
     // Count total today bookings (not cancelled) in IST
-    const totalTodayBookings = await Booking.countDocuments({ startTime: { $gte: todayIST, $lte: endOfDayIST }, status: { $ne: 'CANCELLED' } });
+    const totalTodayBookings = await Booking.countDocuments({ startTime: { $gte: todayIST, $lte: endOfDayIST }, status: { $ne: cancelled} });
 
     // Count total cancelled bookings in IST
-    const totalCancelledBookings = await Booking.countDocuments({ status: 'CANCELLED' });
+    const totalCancelledBookings = await Booking.countDocuments({ status: cancelled});
+
 
     res.json({
       totalBookings,
       totalUpcomingBookings,
       totalTodayBookings,
-      totalCancelledBookings
+      totalCancelledBookings,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
