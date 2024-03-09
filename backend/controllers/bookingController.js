@@ -88,6 +88,9 @@ exports.getAllBookings = async (req, res) => {
   if (sortByTime) {
     sort.startTime = sortByTime === ASC ? 1 : -1;
   }
+  else{
+    sort.updatedAt = -1;
+  }
 
   try {
     let bookings = await Booking.find(filter)

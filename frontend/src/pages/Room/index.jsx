@@ -210,7 +210,7 @@ export default function Room() {
         }}
         handleConfirm={handleDelete}
         description={
-          "Are you sure you want to delete this room? This action cannot be undone."
+          "Are you sure you want to delete this room? Deleting a room will delete all bookings of the room."
         }
       />
     </div>

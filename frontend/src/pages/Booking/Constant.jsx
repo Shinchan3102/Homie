@@ -10,7 +10,6 @@ import { cancelled } from "@/constants/data";
 import { formatAmount, formatDate, formatIndianDateTime } from "@/lib/utils";
 import { ArrowUpDown, MoreHorizontal } from "lucide-react";
 
-
 // ----- Constants and Variables -----
 export const bookingColumns = [
   {
@@ -106,7 +105,18 @@ export const bookingColumns = [
   },
   {
     accessorKey: "startTime",
-    header: "Begins At",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          className="text-right"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Begins At
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      );
+    },
     cell: ({ row }) => (
       <div className="min-w-28">
         {formatIndianDateTime(row.original.startTime)}
@@ -115,7 +125,18 @@ export const bookingColumns = [
   },
   {
     accessorKey: "endTime",
-    header: "Ends At",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          className="text-right"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Ends At
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      );
+    },
     cell: ({ row }) => (
       <div className="min-w-28">
         {formatIndianDateTime(row.original.endTime)}
