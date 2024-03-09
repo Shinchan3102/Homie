@@ -12,7 +12,7 @@ export default function BriefSummaryCard({
         <Icon />
       </div>
       <div className="flex-1 flex flex-col">
-        <div className=" text-muted-foreground">{label}</div>
+        <div className=" text-muted-foreground text-xs">{label}</div>
         <div className="text-xl font-semibold">{data}</div>
       </div>
     </div>
