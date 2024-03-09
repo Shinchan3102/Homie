@@ -44,14 +44,14 @@ exports.getDashboard = async (req, res) => {
     const bookings = await Booking.find();
     const totalBookings = bookings.length;
     const totalUpcomingBookings = bookings.filter(booking => booking.status === upcoming).length;
-    
+
     // Filter today's bookings based on IST day, month, and year
     const todayUpcomingBookings = bookings.filter(booking => {
       const startTimeIST = new Date(booking.startTime);
       const bookingDay = startTimeIST.getDate();
       const bookingMonth = startTimeIST.getMonth();
       const bookingYear = startTimeIST.getFullYear();
-      
+
       const todayDay = todayIST.getDate();
       const todayMonth = todayIST.getMonth();
       const todayYear = todayIST.getFullYear();
@@ -103,7 +103,7 @@ exports.getAllBookings = async (req, res) => {
   if (sortByTime) {
     sort.startTime = sortByTime === ASC ? 1 : -1;
   }
-  else{
+  else {
     sort.updatedAt = -1;
   }
 
@@ -153,6 +153,10 @@ exports.createBooking = async (req, res) => {
     const now = new Date();
     const start = new Date(startTime);
     const end = new Date(endTime);
+
+    if (!rooms || rooms.length === 0) {
+      return res.status(400).json({ message: 'At least one room must be selected' });
+    }
 
     if (start < now) {
       return res.status(400).json({ message: 'Start time cannot be in the past' });
