@@ -41,12 +41,15 @@ const Room = () => {
   const getRooms = async () => {
     let query = {};
     if (startDate && endDate && startDate > endDate) {
+      setStartDate(null);
+      setEndDate(null);
       toast({
         title: "Start date should be less than end date",
       });
       return;
     }
     if (startDate && new Date(startDate) < new Date()) {
+      setStartDate(null);
       toast({
         title: "Start date should be greater than or equal to today",
       });

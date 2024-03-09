@@ -1,6 +1,5 @@
-// models/Booking.js
-
 const mongoose = require('mongoose');
+const { upcoming, completed, cancelled } = require('../utils/constants');
 
 const bookingSchema = new mongoose.Schema({
   email: {
@@ -24,8 +23,8 @@ const bookingSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['UPCOMING', 'COMPLETED', 'CANCELLED'],
-    default: 'UPCOMING'
+    enum: [upcoming, completed, cancelled],
+    default: upcoming
   },
   cancelledAt: {
     type: Date

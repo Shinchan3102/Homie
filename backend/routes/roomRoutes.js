@@ -1,10 +1,7 @@
-// routes/roomRoutes.js
-
 const express = require('express');
 const router = express.Router();
 const roomController = require('../controllers/roomController');
 
-// Define routes for room management
 router.get('/', roomController.getAllRooms);
 router.get('/types', roomController.getRoomTypes);
 router.get('/:id', roomController.getRoomById);

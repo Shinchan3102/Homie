@@ -1,7 +1,31 @@
 
 const Booking = require('../models/Booking');
 const Room = require('../models/Room');
+const { cancelled, ASC, completed, upcoming, confirmBookingEmail, updateBookingEmail, cancelBookingEmail } = require('../utils/constants');
 const { sendEmail } = require('../utils/emailService');
+
+// Function to check room availability
+async function checkRoomAvailability(rooms, startTime, endTime, bookingId = null) {
+  try {
+    const bookings = await Booking.find({ rooms: { $in: rooms } });
+
+    // Filter existing bookings based on overlapping time slots
+    const existingBookings = bookings.filter(booking => {
+      return (
+        ((startTime >= booking.startTime && startTime < booking.endTime) ||
+          (endTime > booking.startTime && endTime <= booking.endTime) ||
+          (startTime <= booking.startTime && endTime >= booking.endTime)) &&
+        (booking.status !== cancelled) &&
+        (!bookingId || booking._id.toString() !== bookingId)
+      );
+    });
+
+    return existingBookings.length === 0;
+  } catch (error) {
+    throw new Error('Error checking room availability');
+  }
+}
+
 
 exports.getDashboard = async (req, res) => {
   try {
@@ -12,9 +36,9 @@ exports.getDashboard = async (req, res) => {
     endOfDay.setHours(23, 59, 59, 999); // Set to the end of the day
 
     const totalBookings = await Booking.countDocuments();
-    const totalUpcomingBookings = await Booking.countDocuments({ startTime: { $gt: today }, status: { $ne: 'CANCELLED' } });
-    const totalTodayBookings = await Booking.countDocuments({ startTime: { $gte: today, $lte: endOfDay }, status: { $ne: 'CANCELLED' } });
-    const totalCancelledBookings = await Booking.countDocuments({ status: 'CANCELLED' });
+    const totalUpcomingBookings = await Booking.countDocuments({ startTime: { $gt: today }, status: { $ne: cancelled } });
+    const totalTodayBookings = await Booking.countDocuments({ startTime: { $gte: today, $lte: endOfDay }, status: { $ne: cancelled } });
+    const totalCancelledBookings = await Booking.countDocuments({ status: cancelled });
 
     res.json({
       totalBookings,
@@ -30,6 +54,7 @@ exports.getDashboard = async (req, res) => {
 
 // Get all bookings
 exports.getAllBookings = async (req, res) => {
+
   const { startDate, endDate, sortByTime, status } = req.query;
 
   // Construct filter object based on the query parameters
@@ -48,7 +73,7 @@ exports.getAllBookings = async (req, res) => {
   // Sorting
   let sort = {};
   if (sortByTime) {
-    sort.startTime = sortByTime === 'asc' ? 1 : -1;
+    sort.startTime = sortByTime === ASC ? 1 : -1;
   }
 
   try {
@@ -63,7 +88,7 @@ exports.getAllBookings = async (req, res) => {
       const endTime = new Date(booking.endTime);
 
       if (now >= endTime) {
-        booking.status = 'COMPLETED';
+        booking.status = completed;
         booking.save();
       }
 
@@ -135,39 +160,21 @@ exports.createBooking = async (req, res) => {
     // Populate rooms
     const populatedRooms = await Room.find({ _id: { $in: rooms } });
 
-    await sendEmail(email, 'Booking Confirmation', `Your booking has been confirmed. Room Number: ${populatedRooms[0].roomNumber}, Start Time: ${start.toDateString()}, End Time: ${end.toDateString()}, Amount: ${amount}`);
+    await sendEmail(
+      email,
+      confirmBookingEmail.title,
+      confirmBookingEmail.description
+        .replace('{{ROOM_NUMBER}}', populatedRooms[0].roomNumber)
+        .replace('{{START_TIME}}', start.toDateString())
+        .replace('{{END_TIME}}', end.toDateString())
+        .replace('{{AMOUNT}}', amount)
+    );
 
     res.status(201).json({ message: 'Booking created successfully', booking: { ...booking?._doc, rooms: populatedRooms } });
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
 };
-
-// Function to check room availability
-async function checkRoomAvailability(rooms, startTime, endTime) {
-  try {
-    console.log('check booking availability===============================================>', rooms, startTime, endTime)
-    const bookings = await Booking.find({ rooms: { $in: rooms } });
-
-    console.log('bookings===============================================>', bookings);
-    // Filter existing bookings based on overlapping time slots
-    const existingBookings = bookings.filter(booking => {
-      return (
-        ((startTime >= booking.startTime && startTime < booking.endTime) ||
-          (endTime > booking.startTime && endTime <= booking.endTime) ||
-          (startTime <= booking.startTime && endTime >= booking.endTime)) && (booking.status !== 'CANCELLED')
-      );
-    });
-
-    console.log('existingBookings===============================================>', existingBookings);
-
-
-
-    return existingBookings.length === 0;
-  } catch (error) {
-    throw new Error('Error checking room availability');
-  }
-}
 
 // Update booking
 exports.updateBooking = async (req, res) => {
@@ -186,7 +193,7 @@ exports.updateBooking = async (req, res) => {
     booking.rooms = rooms || booking.rooms;
     booking.startTime = new Date(startTime || booking.startTime);
     booking.endTime = new Date(endTime || booking.endTime);
-    booking.status = status || "UPCOMING";
+    booking.status = status || upcoming;
     booking.refundedAmount = refundedAmount || booking.refundedAmount;
     booking.amount = amount || booking.amount;
 
@@ -204,8 +211,8 @@ exports.updateBooking = async (req, res) => {
     }
 
     // Check room availability
-    if (status !== 'CANCELLED') {
-      const isAvailable = await checkRoomAvailabilityForUpdate(booking.rooms, start, end, req.params.id);
+    if (status !== cancelled) {
+      const isAvailable = await checkRoomAvailability(booking.rooms, start, end, req.params.id);
       if (!isAvailable) {
         return res.status(400).json({ message: 'One or more rooms are not available during the specified time frame' });
       }
@@ -225,12 +232,27 @@ exports.updateBooking = async (req, res) => {
       );
     }
 
-    if (status === 'CANCELLED') {
+    if (status === cancelled) {
       booking.cancelledAt = new Date();
-      await sendEmail(booking.email, 'Booking Cancellation', `Your booking has been cancelled. Start Time: ${start.toDateString()}, End Time: ${end.toDateString()}, Amount: ${booking.amount}`);
+      await sendEmail(
+        booking.email,
+        cancelBookingEmail.title,
+        cancelBookingEmail.description
+          .replace('{{START_TIME}}', start.toDateString())
+          .replace('{{END_TIME}}', end.toDateString())
+          .replace('{{AMOUNT}}', booking.amount)
+          .replace('{{REFUNDED_AMOUNT}}', booking.refundedAmount)
+      );
     }
     else
-      await sendEmail(booking.email, 'Booking Update', `Your booking has been updated. Start Time: ${start.toDateString()}, End Time: ${end.toDateString()}, Amount: ${booking.amount}`);
+      await sendEmail(
+        booking.email,
+        updateBookingEmail.title,
+        updateBookingEmail.description
+          .replace('{{START_TIME}}', start.toDateString())
+          .replace('{{END_TIME}}', end.toDateString())
+          .replace('{{AMOUNT}}', booking.amount)
+      );
 
     await booking.save();
 
@@ -241,30 +263,6 @@ exports.updateBooking = async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 };
-
-async function checkRoomAvailabilityForUpdate(rooms, startTime, endTime, currentBookingId) {
-  try {
-    console.log('check booking availability===============================================>', rooms, startTime, endTime)
-    const bookings = await Booking.find({ rooms: { $in: rooms } });
-
-    console.log('bookings===============================================>', bookings);
-    // Filter existing bookings based on overlapping time slots
-    const existingBookings = bookings.filter(booking => {
-      return (
-        ((startTime >= booking.startTime && startTime < booking.endTime) ||
-          (endTime > booking.startTime && endTime <= booking.endTime) ||
-          (startTime <= booking.startTime && endTime >= booking.endTime)) &&
-        (booking.status !== 'CANCELLED') &&
-        (booking._id.toString() !== currentBookingId)
-      );
-    });
-
-    console.log('existingBookings===============================================>', existingBookings);
-    return existingBookings.length === 0;
-  } catch (error) {
-    throw new Error('Error checking room availability');
-  }
-}
 
 // Delete booking
 exports.deleteBooking = async (req, res) => {

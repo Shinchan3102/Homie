@@ -1,9 +1,12 @@
 
 const Room = require('../models/Room');
+const { ASC, cancelled } = require('../utils/constants');
 
 exports.getAllRooms = async (req, res) => {
+
   const { type, minPrice, maxPrice, sortByPrice, startTime, endTime, bookingId } = req.query;
 
+  // Validate start and end time
   const start = new Date(startTime);
   const end = new Date(endTime);
 
@@ -27,7 +30,7 @@ exports.getAllRooms = async (req, res) => {
   // Sort
   let sort = {};
   if (sortByPrice) {
-    sort.pricePerHour = sortByPrice === 'asc' ? 1 : -1;
+    sort.pricePerHour = sortByPrice === ASC ? 1 : -1;
   }
 
   try {
@@ -35,10 +38,10 @@ exports.getAllRooms = async (req, res) => {
 
     // Check availability if startDate and endDate are provided
     if (startTime && endTime) {
-      console.log(startTime, endTime);
+
       rooms = rooms.filter(room => {
         for (let booking of room.bookings) {
-          if (booking.status === 'CANCELLED' || booking._id.toString() === bookingId) {
+          if (booking.status === cancelled || booking._id.toString() === bookingId) {
             continue;
           };
           if (start >= booking.startTime && start <= booking.endTime) {
@@ -51,14 +54,15 @@ exports.getAllRooms = async (req, res) => {
             return false;
           }
         }
-        console.log('room', room.roomNumber, room);
+
         return true;
       });
     }
     else if (startTime) {
       rooms = rooms.filter(room => {
         for (let booking of room.bookings) {
-          if (start >= booking.startTime && start <= booking.endTime) {
+          if (booking.status === cancelled || booking._id.toString() === bookingId) continue;
+          if (start <= booking.endTime) {
             return false;
           }
         }
@@ -68,7 +72,8 @@ exports.getAllRooms = async (req, res) => {
     else if (endTime) {
       rooms = rooms.filter(room => {
         for (let booking of room.bookings) {
-          if (end >= booking.startTime && end <= booking.endTime) {
+          if (booking.status === cancelled || booking._id.toString() === bookingId) continue;
+          if (end >= booking.startTime) {
             return false;
           }
         }
@@ -83,7 +88,7 @@ exports.getAllRooms = async (req, res) => {
 };
 
 
-// Get room by ID
+// Get room types
 exports.getRoomTypes = async (req, res) => {
   try {
     const roomTypes = await Room.distinct('type');

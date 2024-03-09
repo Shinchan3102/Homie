@@ -1,4 +1,3 @@
-
 const mongoose = require('mongoose');
 
 const roomSchema = new mongoose.Schema({
@@ -22,7 +21,7 @@ const roomSchema = new mongoose.Schema({
     },
   ]
 }, {
-  timestamps: true // Automatically add createdAt and updatedAt timestamps
+  timestamps: true
 });
 
 module.exports = mongoose.model('Room', roomSchema);
