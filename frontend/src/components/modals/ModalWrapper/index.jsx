@@ -14,7 +14,7 @@ export default function ModalWrapper({ title, open, setOpen, component }) {
         <DialogHeader className={'h-12'}>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>
-            Book a room for your customer easily.
+            Book a room for your customer easily. Charges will be calculated on hourly basis even for incomplete hours.
           </DialogDescription>
         </DialogHeader>
         <div className="max-h-[calc(80vh-6rem)] overflow-y-auto">{component}</div>
