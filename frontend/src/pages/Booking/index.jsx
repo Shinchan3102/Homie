@@ -257,8 +257,14 @@ export default function Booking() {
                     ...selectedBooking,
                     startDate: new Date(selectedBooking.startTime),
                     endDate: new Date(selectedBooking.endTime),
-                    startTime: new Date(selectedBooking.startTime),
-                    endTime: new Date(selectedBooking.endTime),
+                    startTime:
+                      selectedBooking.status === cancelled
+                        ? null
+                        : new Date(selectedBooking.startTime),
+                    endTime:
+                      selectedBooking.status === cancelled
+                        ? null
+                        : new Date(selectedBooking.endTime),
                     roomNumber: selectedBooking.rooms[0]._id,
                     entryTime: formatTimeFromDate(selectedBooking.startTime),
                     exitTime: formatTimeFromDate(selectedBooking.endTime),
