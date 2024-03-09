@@ -29,16 +29,28 @@ async function checkRoomAvailability(rooms, startTime, endTime, bookingId = null
 
 exports.getDashboard = async (req, res) => {
   try {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Set to the beginning of the day
+    const ISTOffset = 5.5 * 60 * 60 * 1000; // IST offset in milliseconds
+    const nowIST = new Date(Date.now() + ISTOffset); // Current time in IST
 
-    const endOfDay = new Date(today);
-    endOfDay.setHours(23, 59, 59, 999); // Set to the end of the day
+    // Set to the beginning of the day in IST
+    const todayIST = new Date(nowIST);
+    todayIST.setHours(0, 0, 0, 0);
 
+    // Set to the end of the day in IST
+    const endOfDayIST = new Date(todayIST);
+    endOfDayIST.setHours(23, 59, 59, 999);
+
+    // Count total bookings
     const totalBookings = await Booking.countDocuments();
-    const totalUpcomingBookings = await Booking.countDocuments({ startTime: { $gt: today }, status: { $ne: cancelled } });
-    const totalTodayBookings = await Booking.countDocuments({ startTime: { $gte: today, $lte: endOfDay }, status: { $ne: cancelled } });
-    const totalCancelledBookings = await Booking.countDocuments({ status: cancelled });
+
+    // Count total upcoming bookings (not cancelled) in IST
+    const totalUpcomingBookings = await Booking.countDocuments({ startTime: { $gt: nowIST }, status: { $ne: 'CANCELLED' } });
+
+    // Count total today bookings (not cancelled) in IST
+    const totalTodayBookings = await Booking.countDocuments({ startTime: { $gte: todayIST, $lte: endOfDayIST }, status: { $ne: 'CANCELLED' } });
+
+    // Count total cancelled bookings in IST
+    const totalCancelledBookings = await Booking.countDocuments({ status: 'CANCELLED' });
 
     res.json({
       totalBookings,
@@ -50,6 +62,7 @@ exports.getDashboard = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 
 
 // Get all bookings
