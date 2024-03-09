@@ -3,6 +3,31 @@ const Booking = require('../models/Booking');
 const Room = require('../models/Room');
 const { sendEmail } = require('../utils/emailService');
 
+exports.getDashboard = async (req, res) => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Set to the beginning of the day
+
+    const endOfDay = new Date(today);
+    endOfDay.setHours(23, 59, 59, 999); // Set to the end of the day
+
+    const totalBookings = await Booking.countDocuments();
+    const totalUpcomingBookings = await Booking.countDocuments({ startTime: { $gt: today }, status: { $ne: 'CANCELLED' } });
+    const totalTodayBookings = await Booking.countDocuments({ startTime: { $gte: today, $lte: endOfDay }, status: { $ne: 'CANCELLED' } });
+    const totalCancelledBookings = await Booking.countDocuments({ status: 'CANCELLED' });
+
+    res.json({
+      totalBookings,
+      totalUpcomingBookings,
+      totalTodayBookings,
+      totalCancelledBookings
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
 // Get all bookings
 exports.getAllBookings = async (req, res) => {
   const { startDate, endDate, sortByTime, status } = req.query;

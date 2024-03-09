@@ -1,6 +1,17 @@
 import { baseUrl } from "@/constants/data";
 import axios from "axios";
 
+export const getDashboardData = async () => {
+  try {
+    const res = await axios.get(baseUrl + '/bookings/dashboard');
+
+    return res.data;
+  } catch (error) {
+    console.log(error);
+    return { message: error?.message, status: 400 };
+  }
+};
+
 export const getAllBookings = async () => {
   try {
     const res = await axios.get(baseUrl + '/bookings');
