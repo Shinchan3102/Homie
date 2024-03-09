@@ -11,8 +11,8 @@ const BriefSummaryCard = () => {
         <div className=" text-muted-foreground">
           Total Revenue
         </div>
-        <div className="text-xl font-bold">
-          $1,200
+        <div className="text-xl font-semibold">
+          Rs. 1,200
         </div>
       </div>
 

@@ -22,3 +22,14 @@ export const getAllRoomTypes = async () => {
     console.log(error);
   }
 };
+
+export const removeRoom = async ({ roomId }) => {
+  try {
+    const res = await axios.delete(baseUrl + '/rooms/' + roomId);
+    console.log(res);
+    return res.data;
+  } catch (error) {
+    console.log(error);
+    return { message: error?.message, status: 400 };
+  }
+};

@@ -312,6 +312,7 @@ const Booking = () => {
             handleClickSubmit={
               !selectedBooking ? handleAddBooking : handleUpdateBooking
             }
+            defaultSelectedRoom={selectedBooking?.rooms[0]?.roomNumber || null}
             onCancel={() => {
               setOpenFormModal(false);
               setSelectedBooking(null);

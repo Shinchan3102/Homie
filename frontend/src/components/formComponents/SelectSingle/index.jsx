@@ -29,15 +29,15 @@ const SelectSingle = ({ form, label, name, options }) => {
               </SelectTrigger>
             </FormControl>
             <SelectContent>
-              {options.length > 0 ? (
-                options.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))
-              ) : (
-                <SelectItem value="NA">No any availability</SelectItem>
-              )}
+              {options.map((option) => (
+                <SelectItem
+                  key={option.value}
+                  disabled={option.value === "NA"}
+                  value={option.value}
+                >
+                  {option.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
           <FormMessage />

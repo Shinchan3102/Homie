@@ -27,9 +27,20 @@ export const roomColumns = [
   },
   {
     accessorKey: "pricePerHour",
-    header: () => <div className="text-right">Price(per hour)</div>,
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          className="text-right"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Price(Hourly)
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      );
+    },
     cell: ({ row }) => (
-      <div className="text-right font-medium">
+      <div className="text-right font-medium min-w-20">
         {formatAmount(row.getValue("pricePerHour"))}
       </div>
     ),

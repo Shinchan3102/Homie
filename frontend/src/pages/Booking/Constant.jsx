@@ -34,7 +34,18 @@ export const bookingColumns = [
   },
   {
     accessorKey: "amount",
-    header: () => <div className="text-right">Amount</div>,
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          className="text-right"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Amount
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      );
+    },
     cell: ({ row }) => (
       <div className="text-right font-medium">
         {formatAmount(row.getValue("amount"))}
@@ -43,7 +54,18 @@ export const bookingColumns = [
   },
   {
     accessorKey: "refundedAmount",
-    header: () => <div className="text-right">Refund</div>,
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          className="text-right"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Refund
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      );
+    },
     cell: ({ row }) => (
       <div className="text-right font-medium">
         {row.original.status === "CANCELLED"

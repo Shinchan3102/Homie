@@ -29,13 +29,14 @@ const formSchema = z.object({
   exitTime: z.string().min(1, { message: "Please select exit time." }),
 });
 
-export default function DemoForm({
+export default function AddAndEditBooking({
   roomTypes,
   onCancel,
   initialValues,
   handleClickSubmit,
   editedRoom,
   isEditMode = false,
+  defaultSelectedRoom,
 }) {
   // ----- States -----
   const [rooms, setRooms] = useState([]);
@@ -43,8 +44,8 @@ export default function DemoForm({
   const [isLoading, setIsLoading] = useState(false);
   const [isFinalLoading, setIsFinalLoading] = useState(false);
   const [selectedRange, setSelectedRange] = useState([
-    initialValues.startTime,
-    initialValues.endTime,
+    initialValues?.startTime || null,
+    initialValues?.endTime || null,
   ]);
 
   // ----- Hooks -----
@@ -96,6 +97,12 @@ export default function DemoForm({
   };
 
   async function onSubmit(values) {
+    if(!selectedRange[0] || !selectedRange[1]) {
+      return toast({
+        title: "Error in date validation",
+        description: "Please check available dates before proceeding.",
+      });
+    }
     setIsFinalLoading(true);
     const data = {
       ...values,
@@ -182,18 +189,17 @@ export default function DemoForm({
             name={"roomNumber"}
             options={
               isLoading
-                ? [{ value: "loading", label: "Loading..." }]
-                : rooms?.map((item) => ({
+                ? [{ value: "NA", label: "Loading..." }]
+                : rooms?.length > 0
+                ? rooms.map((item) => ({
                     value: item._id,
                     label: `${item.roomNumber} - (Rs. ${item.pricePerHour} per hour)`,
                   }))
+                : roomNumber !== "NA" && roomNumber !== "" && defaultSelectedRoom
+                ? [{ value: roomNumber, label: defaultSelectedRoom }]
+                : [{ value: "NA", label: "No rooms found" }]
             }
           />
-          {isEditMode && (
-            <p className="text-xs text-muted-foreground">
-              Leave this field empty if only email have to be updated
-            </p>
-          )}
         </div>
         <TextInput
           form={form}
