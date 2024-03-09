@@ -232,9 +232,11 @@ exports.updateBooking = async (req, res) => {
       );
     }
 
+    let emailSuccess = false;
+
     if (status === cancelled) {
       booking.cancelledAt = new Date();
-      await sendEmail(
+      emailSuccess = await sendEmail(
         booking.email,
         cancelBookingEmail.title,
         cancelBookingEmail.description
@@ -245,7 +247,7 @@ exports.updateBooking = async (req, res) => {
       );
     }
     else
-      await sendEmail(
+      emailSuccess = await sendEmail(
         booking.email,
         updateBookingEmail.title,
         updateBookingEmail.description
@@ -258,7 +260,7 @@ exports.updateBooking = async (req, res) => {
 
     const populatedRooms = await Room.find({ _id: { $in: booking.rooms } });
 
-    res.json({ message: 'Booking updated successfully', booking: { ...booking._doc, rooms: populatedRooms } });
+    res.json({ message: 'Booking updated successfully', booking: { ...booking._doc, rooms: populatedRooms }, emailSuccess });
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
