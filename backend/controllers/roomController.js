@@ -1,4 +1,5 @@
 
+const Booking = require('../models/Booking');
 const Room = require('../models/Room');
 const { ASC, cancelled } = require('../utils/constants');
 
@@ -157,6 +158,9 @@ exports.deleteRoom = async (req, res) => {
     if (!room) {
       return res.status(404).json({ message: 'Room not found' });
     }
+
+    // Delete bookings related to the deleted room
+    await Booking.deleteMany({ rooms: req.params.id });
 
     res.json({ message: 'Room deleted successfully' });
   } catch (error) {
