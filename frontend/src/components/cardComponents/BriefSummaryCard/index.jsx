@@ -7,12 +7,12 @@ export default function BriefSummaryCard({
   Icon = CiCompass1,
 }) {
   return (
-    <div className="rounded-xl shadow-sm bg-white px-6 py-5 flex items-center gap-4 justify-between">
-      <div className="rounded-lg text-2xl bg-muted p-3">
+    <div className="rounded-xl shadow-sm bg-white p-5 flex items-center gap-3 justify-between">
+      <div className="rounded-lg text-3xl bg-muted p-2.5">
         <Icon />
       </div>
       <div className="flex-1 flex flex-col">
-        <div className=" text-muted-foreground text-xs">{label}</div>
+        <div className=" text-muted-foreground text-sm">{label}</div>
         <div className="text-xl font-semibold">{data}</div>
       </div>
     </div>
