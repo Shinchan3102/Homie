@@ -142,9 +142,9 @@ export default function AddAndEditBooking({
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="grid grid-cols-2 gap-6"
+        className="grid grid-cols-1 lg:grid-cols-2 gap-6"
       >
-        <div className="col-span-2 grid grid-cols-2 items-end gap-6">
+        <div className="lg:col-span-2 col-span-1 grid grid-cols-1 lg:grid-cols-2 items-end gap-6">
           <DatePicker form={form} label="Starting Date*" name={"startDate"} />
           <DatePicker form={form} label="Ending Date*" name={"endDate"} />
           <TextInput
@@ -172,7 +172,7 @@ export default function AddAndEditBooking({
           />
           <Button
             disabled={isLoading || isFinalLoading}
-            className="col-span-2 gap-2"
+            className="lg:col-span-2 gap-2"
             type="button"
             onClick={getRooms}
           >
@@ -181,29 +181,30 @@ export default function AddAndEditBooking({
           </Button>
         </div>
         {showRoomCount && (
-          <p className="col-span-2 text-center"> {rooms.length} Rooms found</p>
+          <p className="col-span-2 text-sm text-center">
+            {" "}
+            {rooms.length} Rooms found
+          </p>
         )}
-        <div className="">
-          <SelectSingle
-            form={form}
-            label={"Room Number*"}
-            name={"roomNumber"}
-            options={
-              isLoading
-                ? [{ value: "NA", label: "Loading..." }]
-                : rooms?.length > 0
-                ? rooms.map((item) => ({
-                    value: item._id,
-                    label: `${item.roomNumber} - (Rs. ${item.pricePerHour} per hour)`,
-                  }))
-                : roomNumber !== "NA" &&
-                  roomNumber !== "" &&
-                  defaultSelectedRoom?.roomNumber
-                ? [{ value: roomNumber, label: defaultSelectedRoom.roomNumber }]
-                : [{ value: "NA", label: "No rooms found" }]
-            }
-          />
-        </div>
+        <SelectSingle
+          form={form}
+          label={"Room Number*"}
+          name={"roomNumber"}
+          options={
+            isLoading
+              ? [{ value: "NA", label: "Loading..." }]
+              : rooms?.length > 0
+              ? rooms.map((item) => ({
+                  value: item._id,
+                  label: `${item.roomNumber} - (Rs. ${item.pricePerHour} per hour)`,
+                }))
+              : roomNumber !== "NA" &&
+                roomNumber !== "" &&
+                defaultSelectedRoom?.roomNumber
+              ? [{ value: roomNumber, label: defaultSelectedRoom.roomNumber }]
+              : [{ value: "NA", label: "No rooms found" }]
+          }
+        />
         <TextInput
           form={form}
           type="email"
@@ -218,7 +219,7 @@ export default function AddAndEditBooking({
           placeholder={""}
           disabled
         />
-        <div className="col-span-2 grid grid-cols-2 gap-6">
+        <div className="lg:col-span-2 col-span-1 grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Button type="button" variant={"outline"} onClick={onCancel}>
             Cancel
           </Button>
