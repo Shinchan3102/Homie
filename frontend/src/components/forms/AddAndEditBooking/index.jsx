@@ -10,10 +10,15 @@ import TextInput from "@/components/formComponents/TextInput";
 import { DatePicker } from "@/components/formComponents/DatePicker";
 import { useEffect, useState } from "react";
 import { getAllRooms } from "@/api/roomApis";
-import { LuLoader2 } from "react-icons/lu";
-import { checkDateRangeCompatibility, getTotalPrice } from "@/lib/utils";
+import {
+  checkDateRangeCompatibility,
+  convertToIST,
+  getTotalPrice,
+} from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
+import Loading from "@/components/Loading";
 
+// schema for the form validation
 const formSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email." }),
   roomNumber: z.string().min(3, { message: "Please select room number." }),
@@ -29,19 +34,27 @@ export default function DemoForm({
   onCancel,
   initialValues,
   handleClickSubmit,
+  editedRoom,
+  isEditMode = false,
 }) {
+  // ----- States -----
   const [rooms, setRooms] = useState([]);
+  const [showRoomCount, setShowRoomCount] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isFinalLoading, setIsFinalLoading] = useState(false);
   const [selectedRange, setSelectedRange] = useState([
     initialValues.startTime,
     initialValues.endTime,
   ]);
 
+  // ----- Hooks -----
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: initialValues,
   });
+  const { toast } = useToast();
 
+  // ----- Variables and Constants -----
   const startDate = form.watch("startDate");
   const endDate = form.watch("endDate");
   const entryTime = form.watch("entryTime");
@@ -49,24 +62,16 @@ export default function DemoForm({
   const type = form.watch("type");
   const roomNumber = form.watch("roomNumber");
 
-  const { toast } = useToast();
-
+  // ----- Functions -----
   const getRooms = async () => {
-    const startTime = new Date(
-      new Date(startDate).setHours(
-        entryTime.split(":")[0],
-        entryTime.split(":")[1]
-      )
-    );
+    const startTime = convertToIST(startDate, entryTime);
+    const endTime = convertToIST(endDate, exitTime);
+    const message = checkDateRangeCompatibility(startTime, endTime);
 
-    const endTime = new Date(
-      new Date(endDate).setHours(exitTime.split(":")[0], exitTime.split(":")[1])
-    );
-
-    if (!checkDateRangeCompatibility(startTime, endTime)) {
+    if (message) {
       return toast({
         title: "Error in date validation",
-        description: "Please select valid date range.",
+        description: message,
       });
     }
 
@@ -79,15 +84,19 @@ export default function DemoForm({
 
     setSelectedRange([startTime, endTime]);
 
-    if (type) query.type = type;
+    if (type && type !== "ALL") query.type = type;
+    if (isEditMode) query.bookingId = initialValues._id;
     const res = await getAllRooms(query);
+
     setRooms(res?.rooms || []);
+    setShowRoomCount(true);
     form.setValue("roomNumber", "");
     form.setValue("amount", 0);
     setIsLoading(false);
   };
 
-  function onSubmit(values) {
+  async function onSubmit(values) {
+    setIsFinalLoading(true);
     const data = {
       ...values,
       startTime: selectedRange[0],
@@ -95,8 +104,9 @@ export default function DemoForm({
       rooms: [roomNumber],
     };
 
-    handleClickSubmit(data);
+    await handleClickSubmit(data);
     form.reset();
+    setIsFinalLoading(false);
   }
 
   useEffect(() => {
@@ -107,8 +117,10 @@ export default function DemoForm({
       selectedRange[1] &&
       rooms.length > 0
     ) {
-      const selectedRoom = rooms.find((item) => item._id === roomNumber);
-      console.log(selectedRoom)
+      const selectedRoom = isEditMode
+        ? editedRoom
+        : rooms.find((item) => item._id === roomNumber);
+      console.log(selectedRoom);
       const totalPrice = getTotalPrice(
         selectedRange[0],
         selectedRange[1],
@@ -145,38 +157,44 @@ export default function DemoForm({
             form={form}
             label={"Room Type"}
             name={"type"}
-            options={roomTypes?.map((item) => ({ value: item, label: item }))}
+            options={[
+              { value: "ALL", label: "All" },
+              ...roomTypes.map((item) => ({ value: item, label: item })),
+            ]}
           />
           <Button
-            disabled={isLoading}
+            disabled={isLoading || isFinalLoading}
             className="col-span-2 gap-2"
             type="button"
             onClick={getRooms}
           >
-            <div
-              className={`text-lg ${
-                !isLoading ? "opacity-0" : "opacity-100 animate-spin"
-              }`}
-            >
-              <LuLoader2 />
-            </div>
+            <Loading isLoading={isLoading} />
             Check Availability
           </Button>
         </div>
-
-        <SelectSingle
-          form={form}
-          label={"Room Number*"}
-          name={"roomNumber"}
-          options={
-            isLoading
-              ? [{ value: "loading", label: "Loading..." }]
-              : rooms?.map((item) => ({
-                  value: item._id,
-                  label: `${item.roomNumber} - (Rs. ${item.pricePerHour} per hour)`,
-                }))
-          }
-        />
+        {showRoomCount && (
+          <p className="col-span-2 text-center"> {rooms.length} Rooms found</p>
+        )}
+        <div className="">
+          <SelectSingle
+            form={form}
+            label={"Room Number*"}
+            name={"roomNumber"}
+            options={
+              isLoading
+                ? [{ value: "loading", label: "Loading..." }]
+                : rooms?.map((item) => ({
+                    value: item._id,
+                    label: `${item.roomNumber} - (Rs. ${item.pricePerHour} per hour)`,
+                  }))
+            }
+          />
+          {isEditMode && (
+            <p className="text-xs text-muted-foreground">
+              Leave this field empty if only email have to be updated
+            </p>
+          )}
+        </div>
         <TextInput
           form={form}
           type="email"
@@ -195,7 +213,12 @@ export default function DemoForm({
           <Button type="button" variant={"outline"} onClick={onCancel}>
             Cancel
           </Button>
-          <Button disabled={isLoading} type="submit">
+          <Button
+            className="gap-2"
+            disabled={isLoading || isFinalLoading}
+            type="submit"
+          >
+            <Loading isLoading={isFinalLoading} />
             Submit
           </Button>
         </div>

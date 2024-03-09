@@ -4,7 +4,7 @@ import SlideOver from "../SlideOver"
 
 const Navbar = () => {
   return (
-    <div className="h-16 flex items-center justify-between gap-4 bg-primary-bg px-8 border-b">
+    <div className="h-16 min-h-16 flex items-center justify-between gap-4 bg-primary-bg px-8 border-b">
       <Logo />
 
       <div className="flex items-center gap-4 md:block hidden">

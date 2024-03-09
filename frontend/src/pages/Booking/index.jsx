@@ -80,6 +80,7 @@ const Booking = () => {
       toast({
         title: "Booking cancelled successfully",
       });
+      setOpenFormModal(false);
     }
     setSelectedBooking(null);
   };
@@ -102,6 +103,7 @@ const Booking = () => {
       toast({
         title: "Booking updated successfully",
       });
+      setOpenFormModal(false);
     }
     setSelectedBooking(null);
   };
@@ -223,6 +225,8 @@ const Booking = () => {
         component={
           <AddAndEditBooking
             roomTypes={roomTypes}
+            editedRoom={selectedBooking ? selectedBooking?.rooms[0] : null}
+            isEditMode={!!selectedBooking}
             handleClickSubmit={
               !selectedBooking ? handleAddBooking : handleUpdateBooking
             }
@@ -238,10 +242,10 @@ const Booking = () => {
                     endDate: new Date(selectedBooking.endTime),
                     startTime: new Date(selectedBooking.startTime),
                     endTime: new Date(selectedBooking.endTime),
-                    roomNumber: selectedBooking.rooms[0].roomNumber,
+                    roomNumber: selectedBooking.rooms[0]._id,
                     entryTime: formatTimeFromDate(selectedBooking.startTime),
                     exitTime: formatTimeFromDate(selectedBooking.endTime),
-                    amount: selectedBooking.price,
+                    amount: selectedBooking.amount,
                     type: selectedBooking.rooms[0].type,
                   }
                 : {

@@ -1,31 +1,31 @@
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+// import { Checkbox } from "@/components/ui/checkbox";
 import { formatAmount, formatDate, formatIndianDateTime } from "@/lib/utils";
 import { ArrowUpDown } from "lucide-react";
 
 export const bookingColumns = [
-  {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
+  // {
+  //   id: "select",
+  //   header: ({ table }) => (
+  //     <Checkbox
+  //       checked={
+  //         table.getIsAllPageRowsSelected() ||
+  //         (table.getIsSomePageRowsSelected() && "indeterminate")
+  //       }
+  //       onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+  //       aria-label="Select all"
+  //     />
+  //   ),
+  //   cell: ({ row }) => (
+  //     <Checkbox
+  //       checked={row.getIsSelected()}
+  //       onCheckedChange={(value) => row.toggleSelected(!!value)}
+  //       aria-label="Select row"
+  //     />
+  //   ),
+  //   enableSorting: false,
+  //   enableHiding: false,
+  // },
   {
     accessorKey: "email",
     header: ({ column }) => {
@@ -46,6 +46,13 @@ export const bookingColumns = [
     header: "Status",
     cell: ({ row }) => (
       <div className="capitalize">{row.getValue("status")}</div>
+    ),
+  },
+  {
+    accessorKey: "roomNumber",
+    header: "Room Number",
+    cell: ({ row }) => (
+      <div className="">{row.original.rooms[0]?.roomNumber}</div>
     ),
   },
   {
@@ -72,7 +79,9 @@ export const bookingColumns = [
     accessorKey: "createdAt",
     header: "Booking Date",
     cell: ({ row }) => (
-      <div className="min-w-28">{formatDate(new Date(row.original.createdAt))}</div>
+      <div className="min-w-28">
+        {formatDate(new Date(row.original.createdAt))}
+      </div>
     ),
   },
   {
@@ -90,14 +99,18 @@ export const bookingColumns = [
     accessorKey: "startTime",
     header: "Begins At",
     cell: ({ row }) => (
-      <div className="min-w-28">{formatIndianDateTime(new Date(row.original.startTime))}</div>
+      <div className="min-w-28">
+        {formatIndianDateTime(row.original.startTime)}
+      </div>
     ),
   },
   {
     accessorKey: "endTime",
     header: "Ends At",
     cell: ({ row }) => (
-      <div className="min-w-28">{formatIndianDateTime(new Date(row.original.endTime))}</div>
+      <div className="min-w-28">
+        {formatIndianDateTime(row.original.endTime)}
+      </div>
     ),
   },
 ];

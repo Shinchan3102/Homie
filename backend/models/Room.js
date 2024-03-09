@@ -19,7 +19,7 @@ const roomSchema = new mongoose.Schema({
     {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Booking'
-    }
+    },
   ]
 }, {
   timestamps: true // Automatically add createdAt and updatedAt timestamps

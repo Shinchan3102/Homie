@@ -43,9 +43,12 @@ export function formatAmount(amount = 0) {
   return formattedAmount;
 }
 
-export function formatIndianDateTime(utcDateString) {
-  const utcDate = new Date(utcDateString);
-  const indianDate = new Date(utcDate.getTime() + (5.5 * 60 * 60 * 1000));
+export function formatIndianDateTime(dateString) {
+  let date = new Date(dateString);
+
+  // Adjust for Indian Standard Time (IST) by subtracting 5 hours and 30 minutes
+  date.setHours(date.getHours());
+  date.setMinutes(date.getMinutes());
 
   const options = {
     day: '2-digit',
@@ -54,11 +57,24 @@ export function formatIndianDateTime(utcDateString) {
     hour: '2-digit',
     minute: '2-digit',
     hour12: true,
-    timeZone: 'Asia/Kolkata' // Set the time zone to Indian Standard Time
+    timeZone: 'Asia/Kolkata'
   };
 
-  const formattedDate = indianDate.toLocaleString('en-IN', options);
+  // Format the date in dd-mm-yyyy format
+  const formattedDate = date.toLocaleString('en-IN', options).replace(/\//g, '-');
   return formattedDate;
+}
+
+
+export function convertToIST(utcDate, utcTime) {
+
+  const [hours, minutes] = utcTime.split(':').map(Number);
+
+  // Set the end time in Indian Standard Time (IST)
+  const istDateTime = new Date(
+    new Date(utcDate).setHours(hours, minutes)
+  );
+  return istDateTime;
 }
 
 export function getTotalPrice(startTime, endTime, pricePerHour) {
@@ -73,7 +89,10 @@ export function getTotalPrice(startTime, endTime, pricePerHour) {
   return Math.floor(totalPrice);
 }
 
-export function checkDateRangeCompatibility(start, end) {
+export function checkDateRangeCompatibility(startTime, endTime) {
+  const start = new Date(startTime);
+  const end = new Date(endTime);
+
   if (!(start instanceof Date) || !(end instanceof Date)) {
     return false;
   }
@@ -81,16 +100,19 @@ export function checkDateRangeCompatibility(start, end) {
   const now = new Date();
 
   if (start > end) {
-    return false;
+    return "Entry Time cannot be after the Exit Time";
   }
 
   if (start < now) {
-    return false;
+    return "Entry Time cannot be in the past";
   }
 
-  if (start < now) {
-    return false;
+  const diffInMillis = end - start;
+  const diffInHours = diffInMillis / (1000 * 60 * 60);
+
+  if (diffInHours <= 0) {
+    return "Should be a valid hour range";
   }
 
-  return true;
+  return false;
 }

@@ -7,7 +7,7 @@ const MainLayout = () => {
   return (
     <div className="h-screen max-h-screen flex flex-col">
       <Navbar />
-      <div className="flex flex-1">
+      <div className="flex flex-1 max-h-[calc(100vh-4rem)]">
         <div className="md:block hidden border-r">
           <Sidebar />
         </div>

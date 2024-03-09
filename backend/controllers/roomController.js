@@ -2,7 +2,7 @@
 const Room = require('../models/Room');
 
 exports.getAllRooms = async (req, res) => {
-  const { type, minPrice, maxPrice, sortByPrice, startTime, endTime } = req.query;
+  const { type, minPrice, maxPrice, sortByPrice, startTime, endTime, bookingId } = req.query;
 
   const start = new Date(startTime);
   const end = new Date(endTime);
@@ -31,35 +31,50 @@ exports.getAllRooms = async (req, res) => {
   }
 
   try {
-    let roomsQuery = Room.find(filter).sort(sort);
+    let rooms = await Room.find(filter).sort(sort).populate('bookings');
 
     // Check availability if startDate and endDate are provided
     if (startTime && endTime) {
-      roomsQuery = roomsQuery.where({
-        $or: [
-          { bookings: { $eq: [] } },
-          { bookings: { $elemMatch: { start: { $gte: end }, end: { $lte: start }, status: { $ne: 'CANCELLED' } } } }
-        ]
+      console.log(startTime, endTime);
+      rooms = rooms.filter(room => {
+        for (let booking of room.bookings) {
+          if (booking.status === 'CANCELLED' || booking._id.toString() === bookingId) {
+            continue;
+          };
+          if (start >= booking.startTime && start <= booking.endTime) {
+            return false;
+          }
+          if (end >= booking.startTime && end <= booking.endTime) {
+            return false;
+          }
+          if (start <= booking.startTime && end >= booking.endTime) {
+            return false;
+          }
+        }
+        console.log('room', room.roomNumber, room);
+        return true;
       });
     }
     else if (startTime) {
-      roomsQuery = roomsQuery.where({
-        $or: [
-          { bookings: { $eq: [] } },
-          { bookings: { $elemMatch: { start: { $gte: start }, status: { $ne: 'CANCELLED' } } } }
-        ]
+      rooms = rooms.filter(room => {
+        for (let booking of room.bookings) {
+          if (start >= booking.startTime && start <= booking.endTime) {
+            return false;
+          }
+        }
+        return true;
       });
     }
     else if (endTime) {
-      roomsQuery = roomsQuery.where({
-        $or: [
-          { bookings: { $eq: [] } },
-          { bookings: { $elemMatch: { end: { $lte: end } } } }
-        ]
+      rooms = rooms.filter(room => {
+        for (let booking of room.bookings) {
+          if (end >= booking.startTime && end <= booking.endTime) {
+            return false;
+          }
+        }
+        return true;
       });
     }
-
-    const rooms = await roomsQuery.exec();
 
     res.json({ rooms });
   } catch (error) {

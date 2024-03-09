@@ -1,6 +1,7 @@
 
 const Booking = require('../models/Booking');
 const Room = require('../models/Room');
+const { sendEmail } = require('../utils/emailService');
 
 // Get all bookings
 exports.getAllBookings = async (req, res) => {
@@ -37,9 +38,7 @@ exports.getAllBookings = async (req, res) => {
       const endTime = new Date(booking.endTime);
 
       if (now >= endTime) {
-        // Update status to COMPLETED if end time is complete by date and time
         booking.status = 'COMPLETED';
-        // Save the updated booking
         booking.save();
       }
 
@@ -55,7 +54,7 @@ exports.getAllBookings = async (req, res) => {
 // Get booking by ID
 exports.getBookingById = async (req, res) => {
   try {
-    const booking = await Booking.findById(req.params.id);
+    const booking = await Booking.findById(req.params.id).populate('rooms');
     if (!booking) {
       return res.status(404).json({ message: 'Booking not found' });
     }
@@ -73,6 +72,7 @@ exports.createBooking = async (req, res) => {
     const now = new Date();
     const start = new Date(startTime);
     const end = new Date(endTime);
+
     if (start < now) {
       return res.status(400).json({ message: 'Start time cannot be in the past' });
     }
@@ -80,7 +80,7 @@ exports.createBooking = async (req, res) => {
       return res.status(400).json({ message: 'End time must be greater than start time' });
     }
 
-    if(!Array.isArray(rooms) || rooms.length === 0) {
+    if (!Array.isArray(rooms) || rooms.length === 0) {
       return res.status(400).json({ message: 'At least one room must be selected' });
     }
 
@@ -100,13 +100,19 @@ exports.createBooking = async (req, res) => {
 
     await booking.save();
 
+
     // Update the corresponding rooms with the booking ID
     await Room.updateMany(
       { _id: { $in: rooms } },
       { $push: { bookings: booking._id } }
     );
 
-    res.status(201).json({ message: 'Booking created successfully', booking });
+    // Populate rooms
+    const populatedRooms = await Room.find({ _id: { $in: rooms } });
+
+    await sendEmail(email, 'Booking Confirmation', `Your booking has been confirmed. Room Number: ${populatedRooms[0].roomNumber}, Start Time: ${start.toDateString()}, End Time: ${end.toDateString()}, Amount: ${amount}`);
+
+    res.status(201).json({ message: 'Booking created successfully', booking: { ...booking?._doc, rooms: populatedRooms } });
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
@@ -115,18 +121,22 @@ exports.createBooking = async (req, res) => {
 // Function to check room availability
 async function checkRoomAvailability(rooms, startTime, endTime) {
   try {
-    // Query existing bookings to check for conflicts
-    const existingBookings = await Booking.find({
-      rooms: { $in: rooms },
-      $or: [
-        { startTime: { $lt: endTime }, endTime: { $gt: startTime } },
-        { startTime: { $eq: startTime }, endTime: { $eq: endTime } }
-      ],
-      $or: [
-        { status: { $ne: 'CANCELLED' } },
-        { status: { $exists: false } }
-      ]
+    console.log('check booking availability===============================================>', rooms, startTime, endTime)
+    const bookings = await Booking.find({ rooms: { $in: rooms } });
+
+    console.log('bookings===============================================>', bookings);
+    // Filter existing bookings based on overlapping time slots
+    const existingBookings = bookings.filter(booking => {
+      return (
+        ((startTime >= booking.startTime && startTime < booking.endTime) ||
+          (endTime > booking.startTime && endTime <= booking.endTime) ||
+          (startTime <= booking.startTime && endTime >= booking.endTime)) && (booking.status !== 'CANCELLED')
+      );
     });
+
+    console.log('existingBookings===============================================>', existingBookings);
+
+
 
     return existingBookings.length === 0;
   } catch (error) {
@@ -144,6 +154,8 @@ exports.updateBooking = async (req, res) => {
     if (!booking) {
       return res.status(404).json({ message: 'Booking not found' });
     }
+
+    isRoomUpdated = rooms ? rooms[0] !== booking.rooms[0] : false;
 
     booking.email = email || booking.email;
     booking.rooms = rooms || booking.rooms;
@@ -167,17 +179,39 @@ exports.updateBooking = async (req, res) => {
     }
 
     // Check room availability
-    const isAvailable = await checkRoomAvailabilityForUpdate(booking.rooms, start, end, req.params.id);
-    if (!isAvailable) {
-      return res.status(400).json({ message: 'One or more rooms are not available during the specified time frame' });
+    if (status !== 'CANCELLED') {
+      const isAvailable = await checkRoomAvailabilityForUpdate(booking.rooms, start, end, req.params.id);
+      if (!isAvailable) {
+        return res.status(400).json({ message: 'One or more rooms are not available during the specified time frame' });
+      }
+    }
+
+
+    // Update the corresponding rooms with the booking ID
+    if (isRoomUpdated) {
+      await Room.updateMany(
+        { bookings: req.params.id },
+        { $pull: { bookings: req.params.id } }
+      );
+
+      await Room.updateMany(
+        { _id: { $in: booking.rooms } },
+        { $push: { bookings: booking._id } }
+      );
     }
 
     if (status === 'CANCELLED') {
       booking.cancelledAt = new Date();
+      await sendEmail(booking.email, 'Booking Cancellation', `Your booking has been cancelled. Start Time: ${start.toDateString()}, End Time: ${end.toDateString()}, Amount: ${booking.amount}`);
     }
+    else
+      await sendEmail(booking.email, 'Booking Update', `Your booking has been updated. Start Time: ${start.toDateString()}, End Time: ${end.toDateString()}, Amount: ${booking.amount}`);
 
     await booking.save();
-    res.json({ message: 'Booking updated successfully', booking });
+
+    const populatedRooms = await Room.find({ _id: { $in: booking.rooms } });
+
+    res.json({ message: 'Booking updated successfully', booking: { ...booking._doc, rooms: populatedRooms } });
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
@@ -185,19 +219,22 @@ exports.updateBooking = async (req, res) => {
 
 async function checkRoomAvailabilityForUpdate(rooms, startTime, endTime, currentBookingId) {
   try {
-    const existingBookings = await Booking.find({
-      _id: { $ne: currentBookingId },
-      rooms: { $in: rooms },
-      $or: [
-        { startTime: { $lt: endTime }, endTime: { $gt: startTime } },
-        { startTime: { $eq: startTime }, endTime: { $eq: endTime } }
-      ],
-      $or: [
-        { status: { $ne: 'CANCELLED' } },
-        { status: { $exists: false } }
-      ]
+    console.log('check booking availability===============================================>', rooms, startTime, endTime)
+    const bookings = await Booking.find({ rooms: { $in: rooms } });
+
+    console.log('bookings===============================================>', bookings);
+    // Filter existing bookings based on overlapping time slots
+    const existingBookings = bookings.filter(booking => {
+      return (
+        ((startTime >= booking.startTime && startTime < booking.endTime) ||
+          (endTime > booking.startTime && endTime <= booking.endTime) ||
+          (startTime <= booking.startTime && endTime >= booking.endTime)) &&
+        (booking.status !== 'CANCELLED') &&
+        (booking._id.toString() !== currentBookingId)
+      );
     });
 
+    console.log('existingBookings===============================================>', existingBookings);
     return existingBookings.length === 0;
   } catch (error) {
     throw new Error('Error checking room availability');
