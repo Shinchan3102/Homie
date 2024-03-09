@@ -89,7 +89,7 @@ export default function Booking() {
         description: res.message || "",
       });
     } else {
-      setBookingData((prev) => [...prev, res?.booking]);
+      setBookingData((prev) => [res?.booking, ...prev]);
       toast({
         title: "Booking added successfully",
       });
