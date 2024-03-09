@@ -219,7 +219,7 @@ export default function AddAndEditBooking({
           placeholder={""}
           disabled
         />
-        <div className="md:col-span-2 col-span-1 grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="md:col-span-2 col-span-1 flex flex-col-reverse md:grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <Button type="button" variant={"outline"} onClick={onCancel}>
             Cancel
           </Button>
