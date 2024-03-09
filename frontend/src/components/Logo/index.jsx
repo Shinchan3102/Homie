@@ -1,10 +1,5 @@
+import { logo } from "@/constants/data";
 
-const Logo = () => {
-  return (
-    <div className="text-2xl font-bold">
-      HotelAdmin
-    </div>
-  )
+export default function Logo() {
+  return <div className="text-2xl font-bold">{logo}</div>;
 }
-
-export default Logo

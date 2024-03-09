@@ -34,7 +34,6 @@ export default function AddAndEditBooking({
   onCancel,
   initialValues,
   handleClickSubmit,
-  editedRoom,
   isEditMode = false,
   defaultSelectedRoom,
 }) {
@@ -97,7 +96,7 @@ export default function AddAndEditBooking({
   };
 
   async function onSubmit(values) {
-    if(!selectedRange[0] || !selectedRange[1]) {
+    if (!selectedRange[0] || !selectedRange[1]) {
       return toast({
         title: "Error in date validation",
         description: "Please check available dates before proceeding.",
@@ -116,6 +115,7 @@ export default function AddAndEditBooking({
     setIsFinalLoading(false);
   }
 
+  // ----- Effects -----
   useEffect(() => {
     if (
       roomNumber !== "NA" &&
@@ -124,19 +124,20 @@ export default function AddAndEditBooking({
       selectedRange[1] &&
       rooms.length > 0
     ) {
-      const selectedRoom = isEditMode
-        ? editedRoom
+      const selectedRoom = defaultSelectedRoom
+        ? defaultSelectedRoom
         : rooms.find((item) => item._id === roomNumber);
       console.log(selectedRoom);
       const totalPrice = getTotalPrice(
         selectedRange[0],
         selectedRange[1],
-        selectedRoom.pricePerHour
+        selectedRoom?.pricePerHour
       );
       form.setValue("amount", totalPrice);
     }
   }, [roomNumber]);
 
+  // ----- Render -----
   return (
     <Form {...form}>
       <form
@@ -195,8 +196,10 @@ export default function AddAndEditBooking({
                     value: item._id,
                     label: `${item.roomNumber} - (Rs. ${item.pricePerHour} per hour)`,
                   }))
-                : roomNumber !== "NA" && roomNumber !== "" && defaultSelectedRoom
-                ? [{ value: roomNumber, label: defaultSelectedRoom }]
+                : roomNumber !== "NA" &&
+                  roomNumber !== "" &&
+                  defaultSelectedRoom?.roomNumber
+                ? [{ value: roomNumber, label: defaultSelectedRoom.roomNumber }]
                 : [{ value: "NA", label: "No rooms found" }]
             }
           />

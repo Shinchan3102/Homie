@@ -1,7 +1,17 @@
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { cancelled } from "@/constants/data";
 import { formatAmount, formatDate, formatIndianDateTime } from "@/lib/utils";
-import { ArrowUpDown } from "lucide-react";
+import { ArrowUpDown, MoreHorizontal } from "lucide-react";
 
+
+// ----- Constants and Variables -----
 export const bookingColumns = [
   {
     accessorKey: "email",
@@ -114,6 +124,7 @@ export const bookingColumns = [
   },
 ];
 
+// -----Booking Related Functions -----
 export const getCancelBookingMessage = (startDate, amount) => {
   const { refundAmount, refundPercentage, diffInHours } = getRefundedDetails(
     startDate,
@@ -141,4 +152,71 @@ export const getRefundedDetails = (startDate, amount) => {
   const refundAmount = (amount * refundPercentage) / 100;
 
   return { refundAmount, refundPercentage, diffInHours };
+};
+
+export const getFilteredBookingData = (
+  booking,
+  filterRoomTypes,
+  filterStatus,
+  startDate,
+  endDate,
+  searchString
+) => {
+  const roomType = booking?.rooms[0]?.type;
+  const bookingDate = new Date(booking.startTime);
+  const isRoomTypeSelected = filterRoomTypes.find(
+    (type) => type.name === roomType
+  )?.checked;
+  const isStatusSelected = filterStatus?.find(
+    (status) => status.name === booking.status
+  )?.checked;
+  const isStartDateSelected = !startDate ? true : bookingDate >= startDate;
+  const isEndDateSelected = !endDate ? true : bookingDate <= endDate;
+  const isSearchStringMatched =
+    booking.email?.includes(searchString) ||
+    booking.rooms[0]?.roomNumber?.toString()?.includes(searchString);
+  return (
+    isRoomTypeSelected &&
+    isStatusSelected &&
+    isStartDateSelected &&
+    isEndDateSelected &&
+    isSearchStringMatched
+  );
+};
+
+export const getActions = (actions) => {
+  return {
+    id: "actions",
+    header: "Actions",
+    enableHiding: false,
+    cell: ({ row }) => {
+      const booking = row.original;
+
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="h-8 w-8 p-0">
+              <span className="sr-only">Open menu</span>
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            {actions.map((item, index) => (
+              <div className="" key={index}>
+                <DropdownMenuItem
+                  onClick={() => {
+                    item.onClick(booking);
+                  }}
+                  disabled={item.disabled && booking.status === cancelled}
+                >
+                  {item.label}
+                </DropdownMenuItem>
+                {index !== actions.length - 1 && <DropdownMenuSeparator />}
+              </div>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      );
+    },
+  };
 };

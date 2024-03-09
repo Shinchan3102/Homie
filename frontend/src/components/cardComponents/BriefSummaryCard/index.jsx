@@ -1,7 +1,11 @@
 /* eslint-disable react/prop-types */
 import { CiCompass1 } from "react-icons/ci";
 
-const BriefSummaryCard = ({ label, data=0, Icon = CiCompass1 }) => {
+export default function BriefSummaryCard({
+  label,
+  data = 0,
+  Icon = CiCompass1,
+}) {
   return (
     <div className="rounded-xl shadow-sm bg-white px-6 py-5 flex items-center gap-4 justify-between">
       <div className="rounded-lg text-2xl bg-muted p-3">
@@ -13,6 +17,4 @@ const BriefSummaryCard = ({ label, data=0, Icon = CiCompass1 }) => {
       </div>
     </div>
   );
-};
-
-export default BriefSummaryCard;
+}

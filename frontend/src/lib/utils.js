@@ -84,8 +84,6 @@ export function getTotalPrice(startTime, endTime, pricePerHour) {
 
   const totalPrice = pricePerHour * Math.ceil(hours);
 
-  console.log(totalPrice, hours, timeDiff)
-
   return Math.floor(totalPrice);
 }
 

@@ -1,12 +1,16 @@
 /* eslint-disable react/prop-types */
-import { Button } from '@/components/ui/button'
-import { Calendar } from '@/components/ui/calendar'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { cn } from '@/lib/utils'
-import { format } from 'date-fns'
-import { CalendarIcon } from 'lucide-react'
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { CalendarIcon } from "lucide-react";
 
-const NormalDatePicker = ({label, date, setDate}) => {
+export default function NormalDatePicker({ label, date, setDate }) {
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -30,7 +34,5 @@ const NormalDatePicker = ({label, date, setDate}) => {
         />
       </PopoverContent>
     </Popover>
-  )
+  );
 }
-
-export default NormalDatePicker

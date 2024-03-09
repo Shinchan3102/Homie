@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown } from "lucide-react";
 
-const MultipleSelect = ({ label, options, handleToggle }) => {
+export default function MultipleSelect({ label, options, handleToggle }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -32,6 +32,4 @@ const MultipleSelect = ({ label, options, handleToggle }) => {
       </DropdownMenuContent>
     </DropdownMenu>
   );
-};
-
-export default MultipleSelect;
+}

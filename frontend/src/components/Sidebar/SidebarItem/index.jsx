@@ -1,8 +1,7 @@
 /* eslint-disable react/prop-types */
-
 import { Link } from "react-router-dom";
 
-const SidebarItem = ({ title, path, Icon, isActive }) => {
+export default function SidebarItem({ title, path, Icon, isActive }) {
   return (
     <Link
       to={path}
@@ -14,6 +13,4 @@ const SidebarItem = ({ title, path, Icon, isActive }) => {
       <div className="font-semibold text-lg">{title}</div>
     </Link>
   );
-};
-
-export default SidebarItem;
+}

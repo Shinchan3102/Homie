@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 import { LuLoader2 } from "react-icons/lu";
 
-const Loading = ({ isLoading }) => {
+export default function Loading({ isLoading }) {
   return (
     <div
       className={`text-lg ${
@@ -11,6 +11,4 @@ const Loading = ({ isLoading }) => {
       <LuLoader2 />
     </div>
   );
-};
-
-export default Loading;
+}

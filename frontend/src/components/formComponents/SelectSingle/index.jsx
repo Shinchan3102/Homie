@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-const SelectSingle = ({ form, label, name, options }) => {
+export default function SingleSelect({ form, label, name, options }) {
   return (
     <FormField
       control={form.control}
@@ -45,6 +45,4 @@ const SelectSingle = ({ form, label, name, options }) => {
       )}
     />
   );
-};
-
-export default SelectSingle;
+}

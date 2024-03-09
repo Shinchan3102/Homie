@@ -15,7 +15,7 @@ function App() {
             <Route path="/bookings" element={<Booking />} />
             <Route path="/rooms" element={<Room />} />
           </Route>
-          <Route path="*" element={<h1>Not Found</h1>} />
+          <Route path="*" element={<h1>This page is not working now.</h1>} />
         </Routes>
         </Router>
     </>

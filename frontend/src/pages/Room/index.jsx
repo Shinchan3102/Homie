@@ -1,31 +1,18 @@
 import DataTable from "@/components/tableComponents/DataTable";
-// import { Button } from "@/components/ui/button";
-// import { IoAdd } from "react-icons/io5";
-import { roomColumns } from "./Constant";
+import { getActions, getFilteredRoomsData, roomColumns } from "./Constant";
 import { useEffect, useState } from "react";
-// import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-// import { MoreHorizontal } from "lucide-react";
 import { getAllRoomTypes, getAllRooms, removeRoom } from "@/api/roomApis";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { MoreHorizontal } from "lucide-react";
 import ConfirmModal from "@/components/modals/ConfirmModal";
 import { useToast } from "@/components/ui/use-toast";
 import ModalWrapper from "@/components/modals/ModalWrapper";
 import AddAndEditBooking from "@/components/forms/AddAndEditBooking";
 import { createBooking } from "@/api/bookingApis";
-import NormalInput from "@/components/formComponents/NormalInput";
-import MultipleSelect from "@/components/formComponents/MultipleSelect";
-import NormalDatePicker from "@/components/formComponents/NormalDatePicker";
 import { getTotalPrice } from "@/lib/utils";
+import Loading from "@/components/Loading";
+import Filters from "./Filters";
 
-const Room = () => {
+export default function Room() {
+  // ----- States -----
   const [roomData, setRoomData] = useState([]);
   const [roomTypes, setRoomTypes] = useState([]);
   const [searchString, setSearchString] = useState("");
@@ -35,10 +22,34 @@ const Room = () => {
   const [isRoomConfirmModalOpen, setIsRoomConfirmModalOpen] = useState(false);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
+  // ----- Hooks -----
   const { toast } = useToast();
 
+  // ----- Variables and Constants -----
+  const actions = [
+    {
+      label: "Book",
+      onClick: (room) => {
+        setSelectedRoom(room);
+        setOpenFormModal(true);
+      },
+      disabled: false,
+    },
+    {
+      label: "Delete",
+      onClick: (room) => {
+        setSelectedRoom(room);
+        setIsRoomConfirmModalOpen(true);
+      },
+      disabled: false,
+    },
+  ];
+
+  // ----- Functions -----
   const getRooms = async () => {
+    setIsLoading(true);
     let query = {};
     if (startDate && endDate && startDate > endDate) {
       setStartDate(null);
@@ -65,6 +76,7 @@ const Room = () => {
 
     const data = await getAllRooms(query);
     setRoomData(data?.rooms);
+    setIsLoading(false);
   };
 
   const getRoomTypes = async () => {
@@ -109,6 +121,7 @@ const Room = () => {
     setIsRoomConfirmModalOpen(false);
   };
 
+  // ----- Effects -----
   useEffect(() => {
     getRoomTypes();
   }, []);
@@ -117,97 +130,36 @@ const Room = () => {
     getRooms();
   }, [startDate, endDate]);
 
+  // ----- Render -----
   return (
     <div className="bg-white flex-1 p-8">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold">All Rooms</h1>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-4">
+          <h1 className="text-2xl font-semibold">All Rooms</h1>
+          {isLoading && <Loading isLoading={isLoading} />}
+        </div>
       </div>
 
       {/* filter section  */}
       <div className="mt-8 flex justify-start gap-4 overflow-x-auto items-center">
-        <div className="flex-1 min-w-40">
-          <NormalInput
-            label={"Search here"}
-            data={searchString}
-            setData={setSearchString}
-          />
-        </div>
-        <MultipleSelect
-          options={filterRoomTypes}
-          handleToggle={(id, value) => {
-            setFilterRoomTypes((prev) =>
-              prev.map((type) =>
-                type.id === id ? { ...type, checked: value } : type
-              )
-            );
-          }}
-          label={"Room Types"}
-        />
-        <NormalDatePicker
-          label={"Start Date"}
-          date={startDate}
-          setDate={setStartDate}
-        />
-        <NormalDatePicker
-          label={"End Date"}
-          date={endDate}
-          setDate={setEndDate}
+        <Filters
+          searchString={searchString}
+          setSearchString={setSearchString}
+          filterRoomTypes={filterRoomTypes}
+          setFilterRoomTypes={setFilterRoomTypes}
+          startDate={startDate}
+          setStartDate={setStartDate}
+          endDate={endDate}
+          setEndDate={setEndDate}
         />
       </div>
 
       {/* table section  */}
       <div className="mt-3">
         <DataTable
-          columns={[
-            ...roomColumns,
-            {
-              id: "actions",
-              header: "Actions",
-              enableHiding: false,
-              cell: ({ row }) => {
-                const room = row.original;
-
-                return (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="h-8 w-8 p-0">
-                        <span className="sr-only">Open menu</span>
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                      <DropdownMenuItem
-                        onClick={() => {
-                          setSelectedRoom(room);
-                          setOpenFormModal(true);
-                        }}
-                      >
-                        Book
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        onClick={() => {
-                          setSelectedRoom(room);
-                          setIsRoomConfirmModalOpen(true);
-                        }}
-                      >
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                );
-              },
-            },
-          ]}
+          columns={[...roomColumns, getActions(actions)]}
           data={roomData.filter((room) => {
-            const roomType = room.type;
-            const isRoomTypeSelected = filterRoomTypes.find(
-              (type) => type.name === roomType
-            )?.checked;
-            const isSearchStringMatched = room?.roomNumber
-              ?.toString()
-              ?.includes(searchString);
-            return isRoomTypeSelected && isSearchStringMatched;
+            return getFilteredRoomsData(room, filterRoomTypes, searchString)
           })}
         />
       </div>
@@ -219,7 +171,7 @@ const Room = () => {
         component={
           <AddAndEditBooking
             roomTypes={roomTypes}
-            defaultSelectedRoom={selectedRoom?.roomNumber}
+            defaultSelectedRoom={selectedRoom}
             editedRoom={null}
             isEditMode={false}
             handleClickSubmit={handleAddBooking}
@@ -263,6 +215,4 @@ const Room = () => {
       />
     </div>
   );
-};
-
-export default Room;
+}

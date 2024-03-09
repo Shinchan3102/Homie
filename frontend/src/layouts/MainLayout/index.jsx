@@ -3,7 +3,7 @@ import Navbar from "../../components/Navbar";
 import Sidebar from "../../components/Sidebar";
 import { Toaster } from "@/components/ui/toaster";
 
-const MainLayout = () => {
+export default function MainLayout() {
   return (
     <div className="h-screen max-h-screen flex flex-col">
       <Navbar />
@@ -18,6 +18,4 @@ const MainLayout = () => {
       <Toaster />
     </div>
   );
-};
-
-export default MainLayout;
+}

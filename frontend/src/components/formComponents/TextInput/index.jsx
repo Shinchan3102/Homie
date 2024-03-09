@@ -1,9 +1,22 @@
 /* eslint-disable react/prop-types */
 
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 
-const TextInput = ({ form, label, name, type='text', placeholder, disabled=false }) => {
+export default function TextInput({
+  form,
+  label,
+  name,
+  type = "text",
+  placeholder,
+  disabled = false,
+}) {
   return (
     <FormField
       control={form.control}
@@ -12,13 +25,16 @@ const TextInput = ({ form, label, name, type='text', placeholder, disabled=false
         <FormItem>
           <FormLabel>{label}</FormLabel>
           <FormControl>
-            <Input disabled={disabled} type={type} placeholder={placeholder} {...field} />
+            <Input
+              disabled={disabled}
+              type={type}
+              placeholder={placeholder}
+              {...field}
+            />
           </FormControl>
           <FormMessage />
         </FormItem>
       )}
     />
   );
-};
-
-export default TextInput;
+}
