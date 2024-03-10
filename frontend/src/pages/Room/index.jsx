@@ -1,7 +1,7 @@
 import DataTable from "@/components/tableComponents/DataTable";
 import { getActions, getFilteredRoomsData, roomColumns } from "./Constant";
 import { useEffect, useState } from "react";
-import { getAllRoomTypes, getAllRooms, removeRoom } from "@/api/roomApis";
+import { getAllRoomTypes, getAllRooms } from "@/api/roomApis";
 import ConfirmModal from "@/components/modals/ConfirmModal";
 import { useToast } from "@/components/ui/use-toast";
 import ModalWrapper from "@/components/modals/ModalWrapper";
@@ -104,21 +104,28 @@ export default function Room() {
 
   const handleDelete = async () => {
     if (!selectedRoom) return;
-    const res = await removeRoom({ roomId: selectedRoom._id });
-    if (res.status === 400) {
-      toast({
-        title: "Error in deleting room",
-        description: res.message,
-      });
-    } else {
-      toast({
-        title: "Room deleted successfully",
-      });
-      setRoomData((prev) =>
-        prev.filter((room) => room._id !== selectedRoom._id)
-      );
-    }
     setIsRoomConfirmModalOpen(false);
+    return toast({
+      title: "Room cannot be deleted",
+      description: "Room deletion is restricted for now.",
+    });
+
+
+    // const res = await removeRoom({ roomId: selectedRoom._id });
+    // if (res.status === 400) {
+    //   toast({
+    //     title: "Error in deleting room",
+    //     description: res.message,
+    //   });
+    // } else {
+    //   toast({
+    //     title: "Room deleted successfully",
+    //   });
+    //   setRoomData((prev) =>
+    //     prev.filter((room) => room._id !== selectedRoom._id)
+    //   );
+    // }
+    // setIsRoomConfirmModalOpen(false);
   };
 
   // ----- Effects -----
